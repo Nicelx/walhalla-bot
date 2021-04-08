@@ -1,13 +1,17 @@
 require("dotenv").config();
 require("./kick");
 
-const { Client, DMChannel, User } = require("discord.js");
-const client = new Client();
+const { Client, DMChannel, User, WebhookClient } = require("discord.js");
+const client = new Client({
+	partials: ["MESSAGE", "REACTION"],
+});
+
+const webhookClient = new WebhookClient(process.env.HOOK_ID, process.env.HOOK_TOKEN);
 const PREFIX = "$";
-const mashaId = "440076211276742658"
+const mashaId = "440076211276742658";
 let masha;
 
-const REACTION_MESSAGE_ID = '828689391937519658'
+const REACTION_MESSAGE_ID = "828689391937519658";
 
 const randomFrom = (min = 0, max = 1) => {
 	let rand = min + Math.random() * (max + 1 - min);
@@ -15,8 +19,7 @@ const randomFrom = (min = 0, max = 1) => {
 };
 
 const fetchUser = async (id) => client.users.fetch(id);
-fetchUser(mashaId).then(response => masha = response )
-
+fetchUser(mashaId).then((response) => (masha = response));
 
 client.on("ready", () => {
 	console.log(`${client.user.tag} has logged in`);
@@ -41,23 +44,21 @@ client.on("message", async (message) => {
 			} else {
 				message.channel.send("that member was not found");
 			}
-		} else if (CMD_NAME === "ban") {
+		}
+		
+		if (CMD_NAME === "ban") {
 			if (!message.member.hasPermission("BAN_MEMBERS"))
 				return message.reply("You do not have permissions to use that command");
 
 			if (args.length === 0) message.reply("Provide a ID");
-			
+
 			try {
-				const user = await message.guild.members.ban(args[0])
-				console.log(user)
-			}
-			catch (err) {
-				console.log(err)
+				const user = await message.guild.members.ban(args[0]);
+				console.log(user);
+			} catch (err) {
+				console.log(err);
 			}
 		}
-
-
-
 
 		if (CMD_NAME === "clear") {
 			const channel = message.channel.bulkDelete(100);
@@ -67,7 +68,6 @@ client.on("message", async (message) => {
 			// masha.send(args[0])
 
 			console.log(masha.displayAvatarURL());
-			
 		}
 		if (CMD_NAME === "r") {
 			const [num1, num2] = args;
@@ -76,24 +76,27 @@ client.on("message", async (message) => {
 
 			message.channel.send(`random number from ${min} to ${max} is ${random}`);
 		}
-	}
 
-
-	client.on('messageReactionAdd', (reaction, user) => {
-		const {name } = reaction.emoji;
-		if (reaction.message.id === REACTION_MESSAGE_ID)
-
-		switch(name) {
-			case '🍎' : 
+		if (CMD_NAME === "ann") {
+			const msg = args.join(" ");
+			webhookClient.send(msg);
 		}
+	}
+});
 
-	})
-
-	// if (message.content.match(/привет|приветик/i)) {
-	// 	message.channel.send("приветик))");
-	// 	return;
-	// }
-
+client.on("messageReactionAdd", (reaction, user) => {
+	const { name } = reaction.emoji;
+	const member = reaction.message.guild.members.cache.get(user.id);
+	if (reaction.message.id === REACTION_MESSAGE_ID)
+		switch (name) {
+			case "🍎":
+				member.roles.add("829835736839618603");
+				break;
+			case "🍌":
+				member.roles.add("829835778099511357");
+				break;
+			default:
+		}
 });
 
 client.login(process.env.DISCORDJS_BOT_TOKEN);
